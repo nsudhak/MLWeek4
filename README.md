@@ -5,3 +5,6 @@ The goal of your project is to predict the manner in which they did the exercise
 
 Included in the repository are R Markdown file (ML Week 4 Project.Rmd)
 and the html output (ML-Week-4-Project.html)
+
+To view html file, please use https://htmlpreview.github.io/ and enter the link to html file 
+https://github.com/nsudhak/MLWeek4/blob/main/ML-Week-4-Project.html
