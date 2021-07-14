@@ -1,0 +1,95 @@
+---
+Title: ML Week4 Project
+Author: SN
+Date: 7/12/2021
+Output: html_document
+---
+
+```{r setup, include=FALSE}  
+knitr::opts_chunk$set(echo = TRUE)
+```  
+## Practical Machine Learning Week 4 Project  
+
+The goal of the project is to predict the manner in which they did the exercise. This is the "classe" variable in the training set. You should create a report describing how you built your model, how you used cross validation, what you think the expected out of sample error is, and why you made the choices you did. You will also use your prediction model to predict 20 different test cases.  
+
+### 1.Loading all the required libraries  
+
+``` {r loadlib} 
+library(dplyr)
+library(ggplot2) 
+library(caret)
+library(AppliedPredictiveModeling)
+```
+
+### 2. Importing the datasets into Training and Testing data frames  
+
+``` {r dataimport}
+training <- read.csv("https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv", header = TRUE)
+testing <- read.csv("https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv", header = TRUE)
+``` 
+
+### 3. Data cleansing prior to its use in Modeling  
+### Cleansing Steps are (1) removing near zero variance columns (2) removing not-a-number columns (3) removing columns with 95% values NA  
+
+``` {r datacleanse} 
+
+### for training first and then for testing data sets
+
+#### removing near zero variance columns for Training  
+nzv <- nearZeroVar(training)
+trainingnzv <- training[-c(nzv)]
+
+#### removing the first seven columns which are not numbers for Training  
+trainingnzvnan <- trainingnzv[-c(1:7)]
+
+#### removing columns with NAs > 95% for Training
+na_col <- sapply(trainingnzvnan, function(x) mean(is.na(x))) > 0.95
+trainingnzvnannna <- trainingnzvnan[, na_col ==FALSE]
+
+#### removing near zero variance columns for Testing
+nzv <- nearZeroVar(testing)
+testingnzv <- testing[-c(nzv)]
+
+#### removing the first seven columns which are not numbers for Testing
+testingnzvnan <- testingnzv[-c(1:7)]
+
+#### removing columns with NAs > 95% for Testing
+na_col <- sapply(testingnzvnan, function(x) mean(is.na(x))) > 0.95
+testingnzvnannna <- testingnzvnan[, na_col ==FALSE]
+testdp <- testingnzvnannna
+```
+
+### 4. Splitting Training dataset into 60% Training and 40% Validation datasets   
+
+``` {r datapart}
+dp <- createDataPartition(trainingnzvnannna$classe, p = 0.6, list = FALSE) 
+traindp <- trainingnzvnannna[dp,]
+validdp <- trainingnzvnannna[-dp,]
+```
+
+### 5. Using different models and comparing them for Accuracy - rpart, gbm, rf
+
+``` {r rpart}
+fittrainrpart <- train(classe ~., data = traindp, method = "rpart")
+prdictrpart <- predict(fittrainrpart, newdata = validdp)
+confusionMatrix(prdictrpart, factor(validdp$classe)) 
+```
+
+``` {r gbm}
+fittraingbm <- train(classe ~., data = traindp, method = "gbm", verbose = FALSE)
+prdictgbm <- predict(fittraingbm, newdata = validdp)
+confusionMatrix(prdictgbm, factor(validdp$classe)) 
+```
+
+``` {r rf}
+fittrainrf <- train(classe ~., data = traindp, method = "rf", ntree = 100)
+prdictrf <- predict(fittrainrf, newdata = validdp)
+confusionMatrix(prdictrf, factor(validdp$classe)) 
+```
+### 6. Final Prediction using Ramdom Forests Method as it has the best accuracy 
+
+```{r finalprediction}
+finalprdictrf <- predict(fittrainrf, newdata = testdp)
+finalprdictrf
+```
+ 
